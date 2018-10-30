@@ -1,23 +1,40 @@
-# 导入数据包
 import pandas as pd
 import lightgbm as lgb
 import warnings
-
-# 采取k折模型方案
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import f1_score
-from sklearn.metrics import precision_recall_fscore_support
 import numpy as np
 import math
 
 warnings.filterwarnings('ignore')
-
-# 基础配置信息
-path = '../data/'
 n_splits = 10
 seed = 1030
 
-# lgb 参数
+
+def f1_score(pred, data):
+    label = data.get_label()
+    pred = np.argmax(pred.reshape(11, -1), axis=0)
+    k, f1 = 0, 0
+    precision, recall, TP, FP, FN = [0] * 11, [0] * 11, [0] * 11, [0] * 11, [0] * 11
+
+    for kl in label:
+        kp = pred[k]
+        if kp == kl:
+            TP[kp] += 1
+        else:
+            FP[kp] += 1
+            FN[kl] += 1
+        k += 1
+
+    for j in range(0, 11):
+        precision[j] = TP[j] / (TP[j] + FP[j])
+        recall[j] = TP[j] / (TP[j] + FN[j])
+        f1 += (2 * precision[j] * recall[j]) / (precision[j] + recall[j])
+
+    score = math.pow((1.00 / 11.00) * f1, 2)
+
+    return 'f1_score', score, True
+
+
 params = {
     "learning_rate": 0.1,
     "lambda_l1": 0.1,
@@ -68,33 +85,6 @@ for i in train_col:
 
 X, y, X_test = X.values, y, X_test.values
 
-
-# 自定义F1评价函数
-def f1_score_vali(preds, data_vali):
-    labels = data_vali.get_label()
-    preds = np.argmax(preds.reshape(11, -1), axis=0)
-    k, f1 = 0, 0
-    precision, recall, TP, FP, FN = [0] * 11, [0] * 11, [0] * 11, [0] * 11, [0] * 11
-
-    for kl in labels:
-        kp = preds[k]
-        if kp == kl:
-            TP[kp] += 1
-        else:
-            FP[kp] += 1
-            FN[kl] += 1
-        k += 1
-
-    for j in range(0, 11):
-        precision[j] = TP[j] / (TP[j] + FP[j])
-        recall[j] = TP[j] / (TP[j] + FN[j])
-        f1 += (2 * precision[j] * recall[j]) / (precision[j] + recall[j])
-
-    score = math.pow((1.00 / 11.00) * f1, 2)
-
-    return 'f1_score', score, True
-
-
 cv_pred = []
 
 skf = StratifiedKFold(n_splits=n_splits, random_state=seed, shuffle=True)  # sklearn divide 10
@@ -107,7 +97,7 @@ for index, (train_index, test_index) in enumerate(skf.split(X, y)):  # 后一项
     validation_data = lgb.Dataset(X_valid, label=y_valid)
 
     clf = lgb.train(params, train_data, num_boost_round=100000, valid_sets=[validation_data], early_stopping_rounds=100,
-                    feval=f1_score_vali, verbose_eval=10)
+                    feval=f1_score, verbose_eval=10)
 
     # clf = lgb.cv(params, train_set=train_data, num_boost_round=200, nfold=10)
 

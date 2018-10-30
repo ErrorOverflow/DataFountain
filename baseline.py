@@ -6,7 +6,6 @@ import warnings
 # 采取k折模型方案
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score
-from sklearn.metrics import precision_recall_fscore_support
 import numpy as np
 
 warnings.filterwarnings('ignore')
@@ -33,7 +32,7 @@ params = {
 }
 
 # 读取数据
-train = pd.read_csv('train_2_mix.csv')
+train = pd.read_csv('train_2_dup_del.csv')
 test = pd.read_csv('test_2.csv')
 
 print('train data shape', test.shape)
