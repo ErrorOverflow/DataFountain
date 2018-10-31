@@ -60,19 +60,12 @@ train['current_service'] = train['current_service'].map(current_service2label)
 # 构造原始数据
 y = train.pop('current_service')
 train_id = train.pop('user_id')
-# 好像有点问题
 X = train
 train_col = train.columns
-print(train_col)
 X_test = test[train_col]
 test_id = test['user_id']
-# 有问题数据
-for i in train_col:
-    X[i] = X[i].replace("\\N", -1)
-    X_test[i] = X_test[i].replace("\\N", -1)
 
-X, y, X_test = X.values, y, X_test.values
-
+X, X_test = X.values, X_test.values
 cv_pred = []
 
 skf = StratifiedKFold(n_splits=n_splits, random_state=seed, shuffle=True)  # sklearn divide 10
@@ -87,7 +80,6 @@ for index, (train_index, test_index) in enumerate(skf.split(X, y)):  # 后一项
 
     xx_pred = clf.predict(X_valid, num_iteration=clf.best_iteration)
     xx_pred = [np.argmax(x) for x in xx_pred]
-
     y_test = clf.predict(X_test, num_iteration=clf.best_iteration)
     y_test = [np.argmax(x) for x in y_test]
 
