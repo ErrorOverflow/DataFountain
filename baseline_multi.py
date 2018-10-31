@@ -8,31 +8,31 @@ import math
 warnings.filterwarnings('ignore')
 n_splits = 10
 seed = 1030
-train = pd.read_csv('train_2_fresh.csv')
+train = pd.read_csv('train_2_1.csv')
 test = pd.read_csv('test_2_fresh.csv')
 
 params = {
     "learning_rate": 0.1,
-    "lambda_l1": 0.1,
-    "lambda_l2": 0.2,
-    "max_depth": 10,
-    "num_class": 11,
+    "lambda_l1": 0.0,
+    "lambda_l2": 0.1,
+    "max_depth": 8,
+    "num_class": 5,
     "objective": "multiclass",
     "num_leaves": 63,
     'num_threads': 4,
-    'max_bin': 512,
+    'max_bin': 511,
     'metric': None
 }
 
 
-def f1_score(pred, data):
+def f1_score(predict, data):
     label = data.get_label()
-    pred = np.argmax(pred.reshape(11, -1), axis=0)
+    predict = np.argmax(predict.reshape(5, -1), axis=0)
     k, f1 = 0, 0
-    precision, recall, TP, FP, FN = [0] * 11, [0] * 11, [0] * 11, [0] * 11, [0] * 11
+    precision, recall, TP, FP, FN = [0] * 5, [0] * 5, [0] * 5, [0] * 5, [0] * 5
 
     for kl in label:
-        kp = pred[k]
+        kp = predict[k]
         if kp == kl:
             TP[kp] += 1
         else:
@@ -40,12 +40,12 @@ def f1_score(pred, data):
             FN[kl] += 1
         k += 1
 
-    for j in range(0, 11):
+    for j in range(0, 5):
         precision[j] = TP[j] / (TP[j] + FP[j])
         recall[j] = TP[j] / (TP[j] + FN[j])
         f1 += (2 * precision[j] * recall[j]) / (precision[j] + recall[j])
 
-    score = math.pow((1.00 / 11.00) * f1, 2)
+    score = math.pow((1.00 / 5.00) * f1, 2)
 
     return 'f1_score', score, True
 
@@ -63,6 +63,7 @@ train_id = train.pop('user_id')
 # 好像有点问题
 X = train
 train_col = train.columns
+print(train_col)
 X_test = test[train_col]
 test_id = test['user_id']
 # 有问题数据
