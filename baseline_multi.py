@@ -9,6 +9,7 @@ warnings.filterwarnings('ignore')
 n_splits = 10
 seed = 1030
 train = pd.read_csv('train_2_1.csv')
+train.pop('user_id')
 test = pd.read_csv('test_2_fresh.csv')
 
 params = {
@@ -58,39 +59,36 @@ current_service2label = dict(
 # 原始数据的标签映射
 train['current_service'] = train['current_service'].map(current_service2label)
 # 构造原始数据
-y = train.pop('current_service')
-train_id = train.pop('user_id')
-X = train
+train_real = train.pop('current_service')
+train_X = train
 train_col = train.columns
-X_test = test[train_col]
 test_id = test['user_id']
-
-X, X_test = X.values, X_test.values
-cv_pred = []
+train_X, test_X = train_X.values, test[train_col].values
+cv_predict = []
 
 skf = StratifiedKFold(n_splits=n_splits, random_state=seed, shuffle=True)  # sklearn divide 10
-for index, (train_index, test_index) in enumerate(skf.split(X, y)):  # 后一项为元组
+for index, (train_index, test_index) in enumerate(skf.split(train_X, train_real)):  # 后一项为元组
 
-    X_train, X_valid, y_train, y_valid = X[train_index], X[test_index], y[train_index], y[test_index]
+    X_train, X_valid, y_train, y_valid = train_X[train_index], train_X[test_index], train_real[train_index], train_real[test_index]
     train_data = lgb.Dataset(X_train, label=y_train)
     validation_data = lgb.Dataset(X_valid, label=y_valid)
 
     clf = lgb.train(params, train_data, num_boost_round=100000, valid_sets=[validation_data], early_stopping_rounds=100,
                     feval=f1_score, verbose_eval=10)
 
-    xx_pred = clf.predict(X_valid, num_iteration=clf.best_iteration)
-    xx_pred = [np.argmax(x) for x in xx_pred]
-    y_test = clf.predict(X_test, num_iteration=clf.best_iteration)
+    clf_predict = clf.predict(X_valid, num_iteration=clf.best_iteration)
+    clf_predict = [np.argmax(x) for x in clf_predict]
+    y_test = clf.predict(test_X, num_iteration=clf.best_iteration)
     y_test = [np.argmax(x) for x in y_test]
 
     if index == 0:
-        cv_pred = np.array(y_test).reshape(-1, 1)
+        cv_predict = np.array(y_test).reshape(-1, 1)
     else:
-        cv_pred = np.hstack((cv_pred, np.array(y_test).reshape(-1, 1)))
+        cv_predict = np.hstack((cv_predict, np.array(y_test).reshape(-1, 1)))
 
 # 投票
 submit = []
-for line in cv_pred:
+for line in cv_predict:
     submit.append(np.argmax(np.bincount(line)))
 
 # 保存结果
@@ -98,5 +96,4 @@ df_test = pd.DataFrame()
 df_test['id'] = list(test_id.unique())
 df_test['predict'] = submit
 df_test['predict'] = df_test['predict'].map(label2current_service)
-
 df_test.to_csv('result_2.csv', index=False)
