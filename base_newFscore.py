@@ -8,8 +8,34 @@ import math
 warnings.filterwarnings('ignore')
 n_splits = 10
 seed = 1030
-train = pd.read_csv('train_2_fresh.csv')
-test = pd.read_csv('test_2_fresh.csv')
+train = pd.read_csv('train_2_dup_del.csv')
+test = pd.read_csv('test_2.csv')
+
+
+def f1_score(pred, data):
+    label = data.get_label()
+    pred = np.argmax(pred.reshape(11, -1), axis=0)
+    k, f1 = 0, 0
+    precision, recall, TP, FP, FN = [0] * 11, [0] * 11, [0] * 11, [0] * 11, [0] * 11
+
+    for kl in label:
+        kp = pred[k]
+        if kp == kl:
+            TP[kp] += 1
+        else:
+            FP[kp] += 1
+            FN[kl] += 1
+        k += 1
+
+    for j in range(0, 11):
+        precision[j] = TP[j] / (TP[j] + FP[j])
+        recall[j] = TP[j] / (TP[j] + FN[j])
+        f1 += (2 * precision[j] * recall[j]) / (precision[j] + recall[j])
+
+    score = math.pow((1.00 / 11.00) * f1, 2)
+
+    return 'f1_score', score
+
 
 params = {
     "learning_rate": 0.1,
@@ -20,7 +46,7 @@ params = {
     "objective": "multiclass",
     "num_leaves": 63,
     'num_threads': 4,
-    'max_bin': 512,
+    'max_bin': 511,
     'metric': None
 }
 
@@ -48,6 +74,14 @@ def f1_score(pred, data):
     score = math.pow((1.00 / 11.00) * f1, 2)
 
     return 'f1_score', score, True
+
+
+def logregobj(preds, dtrain):
+    labels = dtrain.get_label()
+    preds = 1.0 / (1.0 + np.exp(-preds))
+    grad = preds - labels
+    hess = preds * (1.0 - preds)
+    return grad, hess
 
 
 # 对标签编码 映射关系
