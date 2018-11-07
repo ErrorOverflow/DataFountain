@@ -50,7 +50,7 @@ params = {
     "learning_rate": 0.05,
     "lambda_l1": 0.1,
     "lambda_l2": 0.2,
-    "max_depth": 10,
+    "max_depth": -1,
     "num_class": 11,
     'application': "multiclass",
     'boosting': 'gbdt',
@@ -99,10 +99,10 @@ for index, (train_index, test_index) in enumerate(skf.split(X, y)):  # 后一项
     train_data = lgb.Dataset(X_train, label=y_train)
     validation_data = lgb.Dataset(X_valid, label=y_valid)
 
-    clf = lgb.train(params, train_data, num_boost_round=100000, valid_sets=[validation_data], early_stopping_rounds=500,
+    clf = lgb.train(params, train_data, num_boost_round=100000, valid_sets=[validation_data], early_stopping_rounds=800,
                     feval=f1_score, verbose_eval=10)
 
-    y_test = clf.predict(X_test, num_iteration=clf.best_iteration + 400)
+    y_test = clf.predict(X_test, num_iteration=clf.best_iteration + 600)
     y_test = [np.argmax(x) for x in y_test]
 
     if index == 0:
