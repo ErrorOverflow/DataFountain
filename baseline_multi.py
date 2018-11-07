@@ -13,10 +13,10 @@ train.pop('user_id')
 test = pd.read_csv('test_2_fresh.csv')
 
 params = {
-    "learning_rate": 0.1,
+    "learning_rate": 0.5,
     "lambda_l1": 0.0,
     "lambda_l2": 0.1,
-    "max_depth": 8,
+    "max_depth": 10,
     "num_class": 5,
     "objective": "multiclass",
     "num_leaves": 63,
@@ -51,7 +51,7 @@ def f1_score(predict, data):
     return 'f1_score', score, True
 
 
-def lgb_train(train_sample, test_sample):
+def lgb_train(train_sample, test_sample, param):
     # 对标签编码 映射关系
     label2current_service = dict(
         zip(range(0, len(set(train_sample['current_service']))), sorted(list(set(train_sample['current_service'])))))
@@ -70,17 +70,14 @@ def lgb_train(train_sample, test_sample):
     for index, (train_index, test_index) in enumerate(skf.split(train_X, train_real)):  # 后一项为元组
 
         X_train, X_valid, y_train, y_valid = train_X[train_index], train_X[test_index], train_real[train_index], \
-                                             train_real[
-                                                 test_index]
+                                             train_real[test_index]
         train_data = lgb.Dataset(X_train, label=y_train)
         validation_data = lgb.Dataset(X_valid, label=y_valid)
 
-        clf = lgb.train(params, train_data, num_boost_round=100000, valid_sets=[validation_data],
+        clf = lgb.train(param, train_data, num_boost_round=100000, valid_sets=[validation_data],
                         early_stopping_rounds=100,
                         feval=f1_score, verbose_eval=10)
-
-        clf_predict = clf.predict(X_valid, num_iteration=clf.best_iteration)
-        clf_predict = [np.argmax(x) for x in clf_predict]
+        print(clf.best_iteration)
         y_test = clf.predict(test_X, num_iteration=clf.best_iteration)
         y_test = [np.argmax(x) for x in y_test]
 
@@ -110,4 +107,5 @@ train1 = train1.replace(99999826, 2)
 train1 = train1.replace(99999827, 2)
 train1 = train1.replace(99999828, 2)
 train1 = train1.replace(99999830, 2)
-round1 = lgb_train(train1, test)
+round1 = lgb_train(train1, test, params)
+round1.to_csv('round1.csv', index=False)

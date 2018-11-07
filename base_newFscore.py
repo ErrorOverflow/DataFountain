@@ -81,13 +81,10 @@ for index, (train_index, test_index) in enumerate(skf.split(X, y)):  # 后一项
     train_data = lgb.Dataset(X_train, label=y_train)
     validation_data = lgb.Dataset(X_valid, label=y_valid)
 
-    clf = lgb.train(params, train_data, num_boost_round=100000, valid_sets=[validation_data], early_stopping_rounds=100,
+    clf = lgb.train(params, train_data, num_boost_round=100000, valid_sets=[validation_data], early_stopping_rounds=200,
                     feval=f1_score, verbose_eval=10)
 
-    xx_pred = clf.predict(X_valid, num_iteration=clf.best_iteration)
-    xx_pred = [np.argmax(x) for x in xx_pred]
-
-    y_test = clf.predict(X_test, num_iteration=clf.best_iteration)
+    y_test = clf.predict(X_test, num_iteration=clf.best_iteration+200)
     y_test = [np.argmax(x) for x in y_test]
 
     if index == 0:

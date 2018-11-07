@@ -71,8 +71,6 @@ for index, (train_index, test_index) in enumerate(skf.split(X, y)):  # 后一项
     clf = lgb.train(params, train_data, num_boost_round=10000, valid_sets=[validation_data], early_stopping_rounds=50,
                     feval=f1_score, verbose_eval=1)
     print(233)
-    xx_pred = clf.predict(X_valid, num_iteration=clf.best_iteration)
-    xx_pred = [np.argmax(x) for x in xx_pred]
 
     y_test = clf.predict(X_test, num_iteration=clf.best_iteration)
     y_test = [np.argmax(x) for x in y_test]
