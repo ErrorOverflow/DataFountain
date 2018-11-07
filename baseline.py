@@ -17,7 +17,7 @@ seed = 1030
 
 # lgb 参数
 params = {
-    "learning_rate": 0.02,
+    "learning_rate": 0.1,
     "lambda_l1": 0.1,
     "lambda_l2": 0.2,
     "max_depth": 10,
